@@ -164,7 +164,7 @@ O ambiente permite testar a lógica do ESP32, o servo motor e os LEDs indicadore
 
 ## 🏠 Tela Principal
 
-<img src="docs/images/home-screen.png" width="300">
+<img src="docs/img/home-screen.png" width="300">
 
 A tela principal apresenta:
 
@@ -176,7 +176,7 @@ A tela principal apresenta:
 
 ## 🔒 Porta Fechada
 
-<img src="docs/images/door-closed.PNG" width="300">
+<img src="docs/img/door-closed.PNG" width="300">
 
 Estado inicial do sistema:
 
@@ -189,7 +189,7 @@ Estado inicial do sistema:
 
 ## 🔓 Porta Aberta
 
-<img src="docs/images/door-open.PNG" width="300">
+<img src="docs/img/door-open.PNG" width="300">
 
 Estado após o envio do comando MQTT:
 
