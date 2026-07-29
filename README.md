@@ -242,7 +242,7 @@ git clone https://github.com/RonaldoFagundes/expoAppIOT.git
 Acesse a pasta:
 
 ```bash
-cd MyHome
+cd expoAppIOT
 ```
 
 Instale as dependências:
