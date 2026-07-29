@@ -1,0 +1,351 @@
+# 🏠 My Home - Sistema IoT de Controle de Porta com ESP32, MQTT e React Native
+
+![React Native](https://img.shields.io/badge/React%20Native-Mobile-blue?logo=react)
+![ESP32](https://img.shields.io/badge/ESP32-IoT-red)
+![MQTT](https://img.shields.io/badge/MQTT-HiveMQ-orange)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow?logo=javascript)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+Projeto desenvolvido para demonstrar a comunicação entre um aplicativo **React Native** e um **ESP32** utilizando o protocolo **MQTT**.
+
+O aplicativo permite controlar uma porta remotamente através de comandos enviados para um broker MQTT. O ESP32 recebe essas mensagens, controla um **servo motor** responsável pela abertura e fechamento da porta e atualiza LEDs indicadores de estado.
+
+O sistema utiliza comunicação em tempo real através de MQTT, simulando uma aplicação de **Internet das Coisas (IoT)**.
+
+---
+
+# 📑 Índice
+
+* Sobre o projeto
+* Funcionalidades
+* Tecnologias utilizadas
+* Arquitetura do sistema
+* Demonstração
+* Simulação no Wokwi
+* Capturas de tela
+* Estrutura do projeto
+* Instalação
+* Configuração MQTT
+* Como executar
+* Melhorias futuras
+* Autor
+* Licença
+
+---
+
+# 📖 Sobre o Projeto
+
+Este projeto foi criado com o objetivo de demonstrar conceitos de **Internet das Coisas (IoT)** utilizando comunicação MQTT entre dispositivos.
+
+A aplicação permite controlar uma porta através de um aplicativo mobile desenvolvido em React Native. Os comandos são enviados para um broker MQTT e recebidos pelo ESP32, que realiza o acionamento do servo motor.
+
+Além do controle mecânico da porta, o sistema possui indicadores visuais através de LEDs conectados ao ESP32:
+
+* 🟢 LED verde: indica que a porta está aberta;
+* 🔴 LED vermelho: indica que a porta está fechada.
+
+Dessa forma, o usuário possui feedback visual tanto no aplicativo quanto no dispositivo físico.
+
+O sistema é composto por:
+
+* 📱 Aplicativo React Native;
+* 🌐 Broker MQTT HiveMQ;
+* 🔌 ESP32;
+* 🚪 Servo Motor;
+* 💡 LEDs indicadores de estado;
+* 📡 Comunicação MQTT/WebSocket.
+
+---
+
+# ✨ Funcionalidades
+
+* ✅ Controle remoto da porta através do aplicativo React Native;
+* ✅ Comunicação em tempo real utilizando MQTT;
+* ✅ Envio de comandos para o ESP32;
+* ✅ Controle de abertura e fechamento utilizando servo motor;
+* ✅ Indicador visual através de LEDs:
+
+  * 🟢 LED verde quando a porta está aberta;
+  * 🔴 LED vermelho quando a porta está fechada;
+* ✅ Interface mobile simples e intuitiva;
+* ✅ Simulação completa utilizando Wokwi.
+
+---
+
+# 🛠 Tecnologias Utilizadas
+
+## 📱 Mobile
+
+* React Native
+* JavaScript
+* MQTT.js
+
+## 🔌 Hardware
+
+* ESP32
+* Servo Motor
+* LED verde
+* LED vermelho
+
+## 📡 Comunicação
+
+* MQTT
+* WebSocket
+* HiveMQ MQTT Broker
+
+## 🖥 Simulação
+
+* Wokwi
+
+---
+
+# 🏗 Arquitetura do Sistema
+
+```text
+              React Native
+                    │
+                    │ MQTT / WebSocket
+                    ▼
+             Broker HiveMQ MQTT
+                    │
+                    ▼
+                  ESP32
+             ┌──────┴────────┐
+             ▼               ▼
+       Servo Motor        LEDs
+             │          🟢 Verde
+             │          🔴 Vermelho
+             ▼
+           Porta
+```
+
+---
+
+# 🔄 Fluxo da Aplicação
+
+1. O usuário pressiona o botão no aplicativo.
+2. O aplicativo publica uma mensagem MQTT no tópico configurado.
+3. O broker HiveMQ recebe a mensagem.
+4. O ESP32 recebe o comando através da assinatura MQTT.
+5. O servo motor realiza a abertura ou fechamento da porta.
+6. Os LEDs são atualizados conforme o estado da porta.
+
+---
+
+# 🎥 Demonstração
+
+Veja o projeto funcionando:
+
+▶️ https://youtu.be/4aEeqXv4Xjc
+
+O vídeo apresenta:
+
+* 📱 Conexão do aplicativo com o broker MQTT;
+* 📡 Comunicação MQTT em tempo real;
+* 🚪 Abertura e fechamento da porta;
+* 🟢 Acionamento do LED verde quando a porta está aberta;
+* 🔴 Acionamento do LED vermelho quando a porta está fechada;
+* 🔄 Atualização do status na interface mobile.
+
+---
+
+# 💻 Simulação no Wokwi
+
+A simulação do ESP32 pode ser executada diretamente no navegador:
+
+🔗 https://wokwi.com/projects/461009003984226305
+
+O ambiente permite testar a lógica do ESP32, o servo motor e os LEDs indicadores sem necessidade do hardware físico.
+
+---
+
+# 📸 Capturas de Tela
+
+## 🏠 Tela Principal
+
+<img src="./docs/images/home-screen.png" width="300">
+
+A tela principal apresenta:
+
+* Status atual da porta;
+* Indicador visual do estado;
+* Botão para enviar comandos.
+
+---
+
+## 🔒 Porta Fechada
+
+<img src="./docs/images/door-closed.png" width="300">
+
+Estado inicial do sistema:
+
+* 🔴 Status: **CLOSED**
+* LED vermelho ligado no ESP32;
+* Porta fechada;
+* Botão disponível para abrir.
+
+---
+
+## 🔓 Porta Aberta
+
+<img src="./docs/images/door-open.png" width="300">
+
+Estado após o envio do comando MQTT:
+
+* 🟢 Status: **OPEN**
+* LED verde ligado no ESP32;
+* Servo motor movimentado;
+* Botão disponível para fechar.
+
+---
+
+# 📁 Estrutura do Projeto
+
+```text
+
+EXPOAPPIOT/
+│
+├── docs/
+│   ├── images/
+│   │   ├── home-screen.png
+│   │   ├── door-open.png
+│   │   └── door-closed.png
+│   │
+│   └── wokwi/
+│       ├── diagram.json
+│       ├── libraries.txt
+│       ├── sketch.ino
+│       └── wokwi-project.txt
+│
+├── src/
+│   └── index.jsx
+│
+├── App.js
+├── package.json
+└── README.md
+
+```
+
+
+---
+
+# ⚙️ Instalação
+
+Clone o repositório:
+
+```bash
+git clone https://github.com/RonaldoFagundes/expoAppIOT.git 
+         
+```  
+
+Acesse a pasta:
+
+```bash
+cd MyHome
+```
+
+Instale as dependências:
+
+```bash
+npm install
+```
+
+ou:
+
+```bash
+yarn
+```
+
+---
+
+# 📡 Configuração MQTT
+
+O projeto utiliza o broker público HiveMQ.
+
+Configuração do ESP32:
+
+```text
+Broker:
+broker.hivemq.com
+
+Porta:
+1883
+
+Protocolo:
+MQTT TCP
+
+Tópico:
+esp32/door
+```
+
+Configuração do React Native:
+
+```text
+Broker:
+broker.hivemq.com
+
+Porta:
+8000
+
+Protocolo:
+MQTT WebSocket
+
+Tópico:
+esp32/door
+```
+
+O ESP32 e o aplicativo devem utilizar o mesmo tópico MQTT para comunicação.
+
+---
+
+# ▶️ Executando o Projeto
+
+## Aplicativo React Native
+
+Execute:
+
+```bash
+npx react-native run-android
+```
+
+ou:
+
+```bash
+npx react-native run-ios
+```
+
+---
+
+## ESP32
+
+1. Configure a rede Wi-Fi;
+2. Grave o código no ESP32;
+3. Aguarde a conexão com o broker MQTT;
+4. Utilize o aplicativo para enviar os comandos.
+
+---
+
+# 🚀 Melhorias Futuras
+
+* Publicação do estado da porta pelo ESP32 para o aplicativo;
+* Histórico de abertura e fechamento;
+* Controle de múltiplas portas;
+* Sensor físico de porta aberta/fechada (reed switch);
+* Notificações Push;
+* Dashboard Web;
+* Autenticação de usuários;
+* Criptografia MQTT.
+
+---
+
+# 👨‍💻 RonaldoFagundes
+
+Projeto desenvolvido como estudo de **Internet das Coisas (IoT)**, utilizando React Native, ESP32 e MQTT para demonstrar comunicação entre software e hardware em tempo real.
+
+---
+
+# 📄 Licença
+
+Este projeto está licenciado sob a licença MIT.
+
+Sinta-se à vontade para estudar, modificar e contribuir com melhorias.

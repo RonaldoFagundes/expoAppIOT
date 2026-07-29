@@ -1,15 +1,206 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import mqtt from 'mqtt';
 
 
-
 function Home() {
 
+  const [status, setStatus] = useState('0');
+  const client = useRef(null);
 
+
+  useEffect(() => {
+
+    const mqttClient = mqtt.connect(
+      'ws://broker.hivemq.com:8000/mqtt'
+    );
+
+    mqttClient.on('connect', () => {
+      console.log('MQTT conectado');
+    });
+
+    client.current = mqttClient;
+
+
+    return () => {
+      mqttClient.end();
+    };
+
+  }, []);
+
+
+
+  const sendMessage = (msg) => {
+
+    setStatus(msg);
+
+    if(client.current){
+
+      client.current.publish(
+        'esp32/door',
+        msg
+      );
+
+    }
+
+  };
+
+
+  const isOpen = status === "1";
+
+
+  return (
+
+    <View style={styles.container}>
+
+      <Text style={styles.header}>
+        My Home
+      </Text>
+
+
+      <View style={styles.card}>
+
+        <Text style={styles.room}>
+          Living Room
+        </Text>
+
+
+        <View 
+          style={[
+            styles.statusCircle,
+            {
+              backgroundColor:
+              isOpen ? '#18e4c2' : '#ee1616'
+            }
+          ]}
+        >
+          <Text style={styles.statusText}>
+            {isOpen ? "OPEN" : "CLOSED"}
+          </Text>
+        </View>
+
+
+      </View>
+
+
+
+      <Pressable
+        style={[
+          styles.button,
+          {
+            backgroundColor:
+            isOpen ? '#ee1616' : '#18e4c2'
+          }
+        ]}
+        onPress={() =>
+          sendMessage(isOpen ? "0" : "1")
+        }
+      >
+
+        <Text style={styles.buttonText}>
+          {isOpen ? "Close Door" : "Open Door"}
+        </Text>
+
+      </Pressable>
+
+
+    </View>
+
+  );
+}
+
+
+export default Home;
+
+
+
+const styles = StyleSheet.create({
+
+  container:{
+    flex:1,
+    backgroundColor:'#101820',
+    padding:25,
+    justifyContent:'center',
+  },
+
+
+  header:{
+    fontSize:32,
+    fontWeight:'bold',
+    color:'#18e4c2',
+    textAlign:'center',
+    marginBottom:40,
+  },
+
+
+  card:{
+    backgroundColor:'#1e2d33',
+    borderRadius:25,
+    padding:30,
+    alignItems:'center',
+
+    shadowColor:'#000',
+    shadowOpacity:0.4,
+    shadowRadius:10,
+    elevation:10,
+  },
+
+
+  room:{
+    fontSize:22,
+    color:'#fff',
+    fontWeight:'bold',
+    marginBottom:30,
+  },
+
+
+  statusCircle:{
+    width:150,
+    height:150,
+    borderRadius:75,
+    justifyContent:'center',
+    alignItems:'center',
+  },
+
+
+  statusText:{
+    color:'#101820',
+    fontSize:22,
+    fontWeight:'bold',
+  },
+
+
+  button:{
+    marginTop:50,
+    paddingVertical:20,
+    borderRadius:20,
+    alignItems:'center',
+
+    shadowColor:'#000',
+    shadowOpacity:0.5,
+    shadowRadius:8,
+    elevation:8,
+  },
+
+
+  buttonText:{
+    color:'#101820',
+    fontSize:20,
+    fontWeight:'bold',
+  },
+
+
+});
+
+
+/*
+import { useEffect, useState } from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import mqtt from 'mqtt';
+
+function Home() {
   const [status, setStatus] = useState('0');
   const [client, setClient] = useState(null);
-
 
   useEffect(() => {
     // Conectar ao broker MQTT via WebSocket
@@ -87,9 +278,6 @@ function Home() {
 
 export default Home;
 
-
-
-
 const styles = StyleSheet.create({
   containerMain: {
     flex: 1,
@@ -164,3 +352,4 @@ const styles = StyleSheet.create({
   }
 
 });
+*/

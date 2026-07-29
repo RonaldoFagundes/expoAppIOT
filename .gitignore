@@ -39,3 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Arquivo de teste
+src/Home/model_1.jsx
+
