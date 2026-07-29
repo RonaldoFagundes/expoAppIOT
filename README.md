@@ -1,16 +1,10 @@
 # 🏠 My Home - Sistema IoT de Controle de Porta com ESP32, MQTT e React Native
 
-<!--
+
 ![React Native](https://img.shields.io/badge/React%20Native-Mobile-blue?logo=react)
 ![ESP32](https://img.shields.io/badge/ESP32-IoT-red)
 ![MQTT](https://img.shields.io/badge/MQTT-HiveMQ-orange)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow?logo=javascript)
-![License](https://img.shields.io/badge/License-MIT-green)
--->
-![React Native](https://img.shields.io/badge/React%20Native-Mobile-61DAFB?logo=react&logoColor=white)
-![ESP32](https://img.shields.io/badge/ESP32-IoT-E7352C)
-![MQTT](https://img.shields.io/badge/MQTT-HiveMQ-660066)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6-F7DF1E?logo=javascript&logoColor=black)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 Projeto desenvolvido para demonstrar a comunicação entre um aplicativo **React Native** e um **ESP32** utilizando o protocolo **MQTT**.
