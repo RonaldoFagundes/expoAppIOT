@@ -1,5 +1,4 @@
-# 🏠 My Home - Sistema IoT de Controle de Porta com ESP32, MQTT e React Native
-
+# 🏠 My Home - Sistema IoT de Controle de Porta e Alimentador automático com ESP32, MQTT e React Native
 
 ![React Native](https://img.shields.io/badge/React%20Native-Mobile-blue?logo=react)
 ![ESP32](https://img.shields.io/badge/ESP32-IoT-red)
@@ -109,7 +108,6 @@ Alimentador Automático
 
 O objetivo é demonstrar, através dos dois projetos, como uma mesma arquitetura de comunicação IoT pode ser aplicada a diferentes situações de automação, com ênfase no alimentador automático como evolução e aplicação principal do sistema.
 
-
 ---
 
 # ✨ Funcionalidades
@@ -178,7 +176,6 @@ Os dois projetos utilizam a mesma base de desenvolvimento:
 💡 LEDs para indicação visual;
 
 🖥️ Wokwi para simulação do hardware.
-
 
 ---
 
@@ -294,6 +291,8 @@ O alimentador utiliza a mesma arquitetura, porém possui um fluxo de comunicaç�
                   ▼
              📱 React Native
              atualiza status
+
+---             
 
 🔄 Fluxo do Alimentador
 Usuário
@@ -427,6 +426,8 @@ ESP32
             ▼
          "Pronto"
 
+---        
+
 🔁 Comunicação bidirecional
 
 No projeto do alimentador, a comunicação ocorre nos dois sentidos:
@@ -482,9 +483,8 @@ O ambiente permite testar a lógica do ESP32, o servo motor e os LEDs indicadore
 ---
 
 
-
 🟢 Alimentador Pronto
-<img src="docs/images/feeder-ready.png" width="300">
+<img src="docs/img/feeder.png" width="300">
 Estado em que o alimentador está disponível para uma nova alimentação:
 
 🟢 Status: Pronto;
@@ -517,6 +517,8 @@ Após o término do processo, o ESP32 fecha a comporta, desliga o LED e publica 
 
 🚪 Controle de Porta
 O primeiro projeto utiliza a mesma base de comunicação MQTT para controlar uma porta através do ESP32.
+
+---
 
 🔒 Porta Fechada
 <img src="docs/img/door-closed.PNG" width="300">
