@@ -6,17 +6,27 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6-yellow?logo=javascript)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-Projeto desenvolvido para demonstrar a comunicação entre um aplicativo **React Native** e um **ESP32** utilizando o protocolo **MQTT**.
 
-O aplicativo permite controlar uma porta remotamente através de comandos enviados para um broker MQTT. O ESP32 recebe essas mensagens, controla um **servo motor** responsável pela abertura e fechamento da porta e atualiza LEDs indicadores de estado.
+Projeto desenvolvido para demonstrar a integração entre React Native, ESP32, MQTT e Wokwi em aplicações de Internet das Coisas (IoT).
 
-O sistema utiliza comunicação em tempo real através de MQTT, simulando uma aplicação de **Internet das Coisas (IoT)**.
+O projeto reúne duas aplicações baseadas na mesma arquitetura de comunicação:
+
+🚪 Controle de Porta IoT — sistema para abertura e fechamento remoto de uma porta.
+
+🐶 Alimentador Automático IoT — sistema para controle remoto da liberação de ração para animais de estimação.
+
+A comunicação entre o aplicativo e o ESP32 é realizada utilizando o protocolo MQTT, através do broker HiveMQ.
+
+O ESP32 recebe os comandos enviados pelo aplicativo, controla os atuadores e, no caso do alimentador automático, também publica informações de estado para o aplicativo.
 
 ---
+
 
 # 📑 Índice
 
 * Sobre o projeto
+* Projeto 1 — Controle de Porta
+* Projeto 2 — Alimentador Automático
 * Funcionalidades
 * Tecnologias utilizadas
 * Arquitetura do sistema
@@ -35,147 +45,238 @@ O sistema utiliza comunicação em tempo real através de MQTT, simulando uma ap
 
 # 📖 Sobre o Projeto
 
-📖 Sobre o Projeto
+Este projeto reúne duas aplicações de Internet das Coisas (IoT) desenvolvidas utilizando ESP32, MQTT, React Native e Wokwi.
 
-Este projeto reúne duas aplicações de Internet das Coisas (IoT) desenvolvidas utilizando ESP32, MQTT, React Native e Wokwi, demonstrando diferentes possibilidades de integração entre software e hardware.
+A proposta é demonstrar como uma mesma arquitetura de comunicação pode ser utilizada em diferentes aplicações de automação.
 
-O primeiro projeto consiste em um sistema de controle de porta, no qual um aplicativo React Native envia comandos através do protocolo MQTT para um ESP32. O microcontrolador recebe os comandos e controla um servo motor responsável pela abertura e fechamento da porta, utilizando LEDs para indicar visualmente seu estado.
+O primeiro projeto foi desenvolvido para controlar uma porta remotamente. A partir dessa arquitetura, foi desenvolvido um segundo projeto com uma aplicação de automação mais completa: um alimentador automático para animais de estimação.
 
-A partir dessa mesma arquitetura de comunicação, foi desenvolvido o segundo projeto, com foco em uma aplicação mais completa de automação: um alimentador automático para animais de estimação.
+A arquitetura utiliza o seguinte fluxo principal:
 
-🐶 Alimentador Automático IoT
+📱 React Native
+       │
+       │ MQTT / WebSocket
+       ▼
+🌐 HiveMQ MQTT Broker
+       │
+       │ MQTT
+       ▼
+🔌 ESP32
+       │
+       ├──► ⚙️ Servo Motor
+       │
+       └──► 💡 LEDs
 
-O alimentador automático é o principal projeto apresentado neste repositório.
 
-A aplicação permite que o usuário controle remotamente a liberação de ração através de um aplicativo React Native. Ao pressionar o botão "Alimentar agora", o aplicativo envia o comando feed através do MQTT.
+No alimentador automático, o fluxo também permite o retorno de informações do ESP32 para o aplicativo:
 
-O ESP32 recebe esse comando e aciona um servo motor, responsável por abrir a comporta do alimentador durante um período determinado. Durante a alimentação, um LED é acionado para indicar que o processo está em andamento.
 
-Além de receber comandos, o ESP32 também publica seu estado através do MQTT. Dessa forma, o aplicativo consegue acompanhar o funcionamento do alimentador em tempo real, exibindo estados como:
+📱 React Native
+       │
+       │ Comando
+       ▼
+🌐 HiveMQ
+       │
+       ▼
+🔌 ESP32
+       │
+       │ Estado
+       ▼
+🌐 HiveMQ
+       │
+       ▼
+📱 React Native
 
-🟢 Pronto — o alimentador está disponível para uma nova alimentação;
 
-🟡 Alimentando — a comporta está aberta e a ração está sendo liberada;
+Dessa forma, o sistema pode trabalhar tanto com envio de comandos quanto com feedback de estado em tempo real.
 
-🔴 Desconectado — o aplicativo não está conectado ao sistema.
 
-Essa segunda aplicação amplia a arquitetura utilizada no projeto de controle de porta, adicionando feedback de estado entre o dispositivo e o aplicativo, tornando a comunicação entre hardware e software mais completa.
+🚪 Projeto 1 — Controle de Porta
+O primeiro projeto consiste em um sistema IoT para controle remoto de uma porta.
 
-🔗 Arquitetura em comum
+O usuário utiliza o aplicativo React Native para enviar comandos através do protocolo MQTT.
 
+O broker HiveMQ recebe as mensagens e encaminha os comandos para o ESP32.
+
+O ESP32 interpreta os comandos e controla um servo motor, responsável pela movimentação da porta.
+
+LEDs são utilizados para indicar visualmente o estado atual da porta.
+
+Estados da porta
+🟢 OPEN — porta aberta;
+
+🔴 CLOSED — porta fechada.
+
+
+📱 React Native
+       │
+       │ comando MQTT
+       ▼
+🌐 HiveMQ
+       │
+       │ MQTT
+       ▼
+🔌 ESP32
+       │
+       ├──► ⚙️ Servo Motor
+       │        │
+       │        └──► Abre / Fecha porta
+       │
+       └──► 💡 LEDs
+                ├── 🟢 Porta aberta
+                └── 🔴 Porta fechada
+
+
+
+🐶 Projeto 2 — Alimentador Automático
+O alimentador automático é uma evolução da arquitetura utilizada no projeto de controle de porta.
+
+O sistema permite que o usuário controle remotamente a liberação de ração através de um aplicativo React Native.
+
+Ao pressionar o botão "Alimentar agora", o aplicativo publica o comando feed no broker MQTT.
+
+O ESP32 recebe esse comando e aciona um servo motor responsável pela abertura da comporta do alimentador.
+
+Durante o processo de alimentação, um LED é acionado para indicar que a operação está em andamento.
+
+Após o período configurado:
+
+O servo retorna à posição fechada;
+
+O LED é desligado;
+
+O ESP32 publica o estado ready;
+
+O aplicativo atualiza a interface.
+
+Estados do alimentador
+🟢 Pronto (ready) — o alimentador está disponível;
+
+🟡 Alimentando (feeding) — a ração está sendo liberada;
+
+🔴 Desconectado — o aplicativo ou dispositivo não está conectado.
+
+Fluxo
+📱 React Native
+       │
+       │ feed
+       ▼
+🌐 HiveMQ Broker
+       │
+       │ esp32/feeder/set
+       ▼
+🔌 ESP32
+       │
+       ├──► ⚙️ Servo
+       │       │
+       │       └──► Abre comporta
+       │
+       └──► 💡 LED
+               │
+               └──► Alimentando
+                       │
+                       ▼
+                  🥣 Libera ração
+                       │
+                       ▼
+                  Fecha comporta
+                       │
+                       ▼
+                  Publica ready
+                       │
+                       ▼
+                📱 React Native
+
+🔗 Arquitetura em Comum
 Os dois projetos utilizam a mesma base tecnológica:
 
-📱 Aplicativo React Native;
-
-🌐 Broker MQTT HiveMQ;
+📱 React Native;
 
 🔌 ESP32;
 
-📡 Comunicação MQTT;
+🌐 HiveMQ MQTT Broker;
+
+📡 MQTT;
 
 ⚙️ Servo motor;
 
-💡 Indicadores visuais;
+💡 LEDs;
 
-🖥️ Simulação através do Wokwi.
+🖥️ Wokwi.
 
-A diferença está na aplicação da tecnologia:
+A evolução do projeto pode ser representada da seguinte forma:
 
 Projeto 1
-Controle de Porta
-      │
-      ├── React Native
-      ├── MQTT
-      ├── ESP32
-      ├── Servo
-      └── LEDs
+🚪 Controle de Porta
+       │
+       ├── React Native
+       ├── MQTT
+       ├── ESP32
+       ├── Servo Motor
+       └── LEDs
 
-
-              ↓ evolução ↓
-
+              │
+              │ Evolução
+              ▼
 
 Projeto 2
-Alimentador Automático
-      │
-      ├── React Native
-      ├── MQTT
-      ├── ESP32
-      ├── Servo
-      ├── LED
-      ├── Controle de alimentação
-      └── Feedback de estado em tempo real
-
-
-O objetivo é demonstrar, através dos dois projetos, como uma mesma arquitetura de comunicação IoT pode ser aplicada a diferentes situações de automação, com ênfase no alimentador automático como evolução e aplicação principal do sistema.
+🐶 Alimentador Automático
+       │
+       ├── React Native
+       ├── MQTT
+       ├── ESP32
+       ├── Servo Motor
+       ├── LED
+       ├── Controle de alimentação
+       └── Feedback de estado
 
 ---
 
-# ✨ Funcionalidades
-
 ✨ Funcionalidades
-🐶 Alimentador Automático IoT — Projeto Principal
-
+🐶 Alimentador Automático IoT
 ✅ Controle remoto do alimentador através do aplicativo React Native;
 
-✅ Comando de alimentação enviado via MQTT;
+✅ Envio do comando feed via MQTT;
 
 ✅ Comunicação em tempo real entre aplicativo e ESP32;
 
-✅ Acionamento do servo motor para abertura da comporta;
+✅ Acionamento do servo motor;
 
-✅ Liberação automática da ração durante o período configurado;
+✅ Abertura automática da comporta;
 
-✅ LED indicador durante o processo de alimentação;
+✅ Liberação da ração durante o período configurado;
+
+✅ LED indicador durante a alimentação;
 
 ✅ Publicação do estado do alimentador pelo ESP32;
 
-✅ Atualização do aplicativo entre os estados Pronto e Alimentando;
+✅ Atualização da interface entre Pronto e Alimentando;
 
-✅ Indicador de conexão entre o aplicativo e o sistema;
+✅ Indicador de conexão;
 
-✅ Bloqueio do botão durante o processo de alimentação;
+✅ Bloqueio do botão durante a alimentação;
 
 ✅ Reconexão do ESP32 ao broker MQTT;
 
-✅ Simulação completa utilizando Wokwi.
+✅ Simulação utilizando Wokwi.
 
-🚪 Controle de Porta — Projeto Inicial
+🚪 Controle de Porta IoT
+✅ Controle remoto da porta;
 
-✅ Controle remoto da porta através do aplicativo React Native;
-
-✅ Comunicação em tempo real utilizando MQTT;
+✅ Comunicação MQTT em tempo real;
 
 ✅ Envio de comandos para o ESP32;
 
-✅ Controle de abertura e fechamento utilizando servo motor;
+✅ Controle de abertura e fechamento através de servo motor;
 
-✅ Indicadores visuais através de LEDs:
+✅ LED verde para indicar porta aberta;
 
-🟢 LED verde quando a porta está aberta;
+✅ LED vermelho para indicar porta fechada;
 
-🔴 LED vermelho quando a porta está fechada;
-
-✅ Interface mobile para controle do dispositivo;
+✅ Interface mobile;
 
 ✅ Simulação utilizando Wokwi.
 
-🔗 Tecnologias em Comum
-
-Os dois projetos utilizam a mesma base de desenvolvimento:
-
-📱 React Native para a interface mobile;
-
-🔌 ESP32 para controle do hardware;
-
-🌐 HiveMQ como broker MQTT;
-
-📡 MQTT para comunicação entre aplicativo e dispositivo;
-
-⚙️ Servo motor para movimentação mecânica;
-
-💡 LEDs para indicação visual;
-
-🖥️ Wokwi para simulação do hardware.
 
 ---
 
@@ -208,16 +309,14 @@ Os dois projetos utilizam a mesma base de desenvolvimento:
 
 # 🏗 Arquitetura do Sistema
 
-
 🏗 Arquitetura do Sistema
-
-Os dois projetos utilizam uma arquitetura IoT baseada em React Native, MQTT e ESP32. O primeiro projeto utiliza essa estrutura para controlar uma porta, enquanto o segundo aplica a mesma tecnologia em um alimentador automático para pets, adicionando comunicação de estado em tempo real.
+A arquitetura geral do projeto pode ser representada da seguinte maneira:
 
                          📱 React Native
                                │
                                │ MQTT / WebSocket
                                ▼
-                      🌐 Broker HiveMQ
+                      🌐 HiveMQ Broker
                                │
                                │ MQTT
                                ▼
@@ -228,166 +327,85 @@ Os dois projetos utilizam uma arquitetura IoT baseada em React Native, MQTT e ES
                     ▼                     ▼
               ⚙️ Servo Motor          💡 LED
                     │                     │
-          ┌─────────┴─────────┐           │
-          │                   │           │
-          ▼                   ▼           ▼
-     🚪 Controle         🐶 Alimentador  Status
-       de Porta             Automático
-          │                   │
-          ▼                   ▼
-     Abre / Fecha       Libera a ração
-
-🚪 Projeto 1 — Controle de Porta
-React Native
-      │
-      │ comando MQTT
-      ▼
-HiveMQ
-      │
-      ▼
-ESP32
-      │
-      ├──► Servo Motor
-      │       │
-      │       └──► Abre / Fecha porta
-      │
-      └──► LEDs
-              ├── 🟢 Porta aberta
-              └── 🔴 Porta fechada
-
-🐶 Projeto 2 — Alimentador Automático
-
-O alimentador utiliza a mesma arquitetura, porém possui um fluxo de comunicação mais completo, pois o ESP32 também publica o estado do dispositivo de volta para o aplicativo.
-
-                    📱 React Native
-                         │
-                         │ "feed"
-                         ▼
-                  🌐 HiveMQ Broker
-                         │
-                         │ esp32/feeder/set
-                         ▼
-                      🔌 ESP32
-                         │
-                  ┌──────┴──────┐
-                  ▼             ▼
-             ⚙️ Servo        💡 LED
-                  │             │
-                  ▼             ▼
-             Comporta       Alimentando
-                  │
-                  ▼
-             🥣 Libera ração
-                  │
-                  │
-                  ▼
-             ESP32 publica
-                  │
-          ┌───────┴────────┐
-          ▼                ▼
-      "feeding"          "ready"
-          │                │
-          └───────┬────────┘
-                  ▼
-             📱 React Native
-             atualiza status
-
----             
-
-🔄 Fluxo do Alimentador
-Usuário
-   │
-   ▼
-"Alimentar agora"
-   │
-   ▼
-MQTT: "feed"
-   │
-   ▼
-ESP32
-   │
-   ├──► Publica "feeding"
-   ├──► Liga LED
-   └──► Abre servo
-            │
-            ▼
-       Libera ração
-            │
-            ▼
-       Fecha servo
-            │
-            ├──► Desliga LED
-            └──► Publica "ready"
-                         │
-                         ▼
-                    Aplicativo
-                         │
-                         ▼
-                      "Pronto"
-
-
-Essa arquitetura demonstra a evolução do projeto inicial de controle de porta para uma aplicação de automação mais completa, utilizando o MQTT não apenas para enviar comandos ao ESP32, mas também para retornar informações de estado ao aplicativo.
+             ┌──────┴──────┐              │
+             │             │              │
+             ▼             ▼              ▼
+        🚪 Controle   🐶 Alimentador    Status
+          de Porta       Automático
+             │             │
+             ▼             ▼
+        Abre/Fecha     Libera Ração
 
 ---
 
 🔄 Fluxo da Aplicação
 
-Os projetos utilizam um fluxo baseado em React Native → MQTT → ESP32, com o alimentador automático acrescentando o retorno do estado do dispositivo para o aplicativo.
+🚪 Controle de Porta
+O funcionamento ocorre da seguinte forma:
 
-🚪 Projeto 1 — Controle de Porta
+O usuário pressiona o botão no aplicativo;
 
-O usuário pressiona o botão no aplicativo.
+O aplicativo publica um comando MQTT;
 
-O aplicativo publica um comando MQTT.
+O broker HiveMQ recebe a mensagem;
 
-O broker HiveMQ recebe a mensagem.
+O ESP32 recebe o comando;
 
-O ESP32 recebe o comando através da assinatura MQTT.
+O ESP32 aciona o servo motor;
 
-O ESP32 aciona o servo motor.
-
-O servo realiza a abertura ou fechamento da porta.
+O servo realiza a abertura ou fechamento;
 
 Os LEDs são atualizados conforme o estado da porta.
 
-React Native
-     │
-     │ comando MQTT
-     ▼
-HiveMQ
-     │
-     ▼
-ESP32
-     │
-     ├──► Servo → Porta
-     │
-     └──► LEDs → Estado
+Usuário
+   │
+   ▼
+📱 React Native
+   │
+   │ comando MQTT
+   ▼
+🌐 HiveMQ
+   │
+   ▼
+🔌 ESP32
+   │
+   ├──► ⚙️ Servo → Porta
+   │
+   └──► 💡 LEDs → Estado
 
-🐶 Projeto 2 — Alimentador Automático
 
-O usuário pressiona "Alimentar agora" no aplicativo.
+🐶 Alimentador Automático
+O fluxo do alimentador é composto pelas seguintes etapas:
 
-O React Native publica o comando feed no tópico esp32/feeder/set.
+O usuário pressiona "Alimentar agora";
 
-O broker HiveMQ encaminha a mensagem para o ESP32.
+O React Native publica o comando feed;
 
-O ESP32 recebe o comando através da assinatura MQTT.
+O comando é enviado para esp32/feeder/set;
 
-O ESP32 publica o estado feeding.
+O broker HiveMQ encaminha a mensagem para o ESP32;
 
-O aplicativo recebe o estado e exibe "Alimentando".
+O ESP32 recebe o comando;
 
-O servo motor é movimentado para abrir a comporta.
+O ESP32 publica o estado feeding;
 
-O LED é ligado durante a liberação da ração.
+O aplicativo exibe "Alimentando";
 
-Após o tempo configurado, o servo retorna à posição fechada.
+O servo abre a comporta;
 
-O LED é desligado.
+O LED é ligado;
 
-O ESP32 publica o estado ready.
+A ração é liberada;
 
-O aplicativo recebe o novo estado e retorna para "Pronto".
+O servo retorna à posição fechada;
+
+O LED é desligado;
+
+O ESP32 publica o estado ready;
+
+O aplicativo recebe o novo estado;
+
+A interface retorna para "Pronto".
 
 Usuário
    │
@@ -396,15 +414,15 @@ Usuário
    │
    │ feed
    ▼
-React Native
+📱 React Native
    │
    │ MQTT / WebSocket
    ▼
-HiveMQ
+🌐 HiveMQ
    │
    │ MQTT
    ▼
-ESP32
+🔌 ESP32
    │
    ├──► "feeding"
    │
@@ -421,16 +439,26 @@ ESP32
    └──► "ready"
             │
             ▼
-       React Native
+       📱 React Native
             │
             ▼
          "Pronto"
 
 ---        
 
-🔁 Comunicação bidirecional
+🔁 Comunicação Bidirecional
+No alimentador automático, a comunicação ocorre em ambos os sentidos.
 
-No projeto do alimentador, a comunicação ocorre nos dois sentidos:
+O aplicativo envia o comando:
+
+feed
+
+O ESP32 publica os estados:
+
+feeding
+ready
+
+Representação:
 
               📱 React Native
                     │
@@ -449,9 +477,7 @@ No projeto do alimentador, a comunicação ocorre nos dois sentidos:
                     ▼
               📱 React Native
 
-
-Essa comunicação permite que o aplicativo não apenas envie o comando para alimentar, mas também acompanhe o estado real do processo, proporcionando um feedback em tempo real ao usuário.
-
+Essa comunicação permite que o aplicativo envie comandos e acompanhe o estado do dispositivo em tempo real.
 
 ---
 
@@ -482,10 +508,11 @@ O ambiente permite testar a lógica do ESP32, o servo motor e os LEDs indicadore
 
 ---
 
+📸 Capturas de Tela
 
-🟢 Alimentador Pronto
+🟢 Alimentador — Pronto
 <img src="docs/img/feeder.png" width="300">
-Estado em que o alimentador está disponível para uma nova alimentação:
+Estado em que o alimentador está disponível para uma nova alimentação.
 
 🟢 Status: Pronto;
 
@@ -497,9 +524,10 @@ Estado em que o alimentador está disponível para uma nova alimentação:
 
 ⚙️ Servo motor na posição fechada.
 
-🟡 Alimentando
+
+🟡 Alimentador — Alimentando
 <img src="docs/img/feeder.png" width="300">
-Estado apresentado durante a liberação da ração:
+Estado apresentado durante a liberação da ração.
 
 🟡 Status: Alimentando;
 
@@ -515,12 +543,8 @@ Estado apresentado durante a liberação da ração:
 
 Após o término do processo, o ESP32 fecha a comporta, desliga o LED e publica o estado ready.
 
-🚪 Controle de Porta
-O primeiro projeto utiliza a mesma base de comunicação MQTT para controlar uma porta através do ESP32.
 
----
-
-🔒 Porta Fechada
+🚪 Controle de Porta — Fechada
 <img src="docs/img/door-closed.PNG" width="300">
 Estado inicial do sistema:
 
@@ -532,7 +556,7 @@ Estado inicial do sistema:
 
 🔘 Botão disponível para abrir.
 
-🔓 Porta Aberta
+🚪 Controle de Porta — Aberta
 <img src="docs/img/door-open.PNG" width="300">
 Estado após o envio do comando MQTT:
 
@@ -542,27 +566,26 @@ Estado após o envio do comando MQTT:
 
 ⚙️ Servo motor movimentado;
 
-🔘 Botão disponível para fechar. 
+🔘 Botão disponível para fechar.
+
 
 ---
 
 # 📁 Estrutura do Projeto
 
-EXPOAPPIOT/
+
+expoAppIOT/
 │
 ├── docs/
 │   │
 │   ├── images/
 │   │   ├── home-screen.png
-│   │   │
 │   │   ├── feeder-ready.png
 │   │   ├── feeder-feeding.png
-│   │   │
 │   │   ├── door-open.png
 │   │   └── door-closed.png
 │   │
 │   └── wokwi/
-│       │
 │       ├── diagram.json
 │       ├── libraries.txt
 │       ├── sketch.ino
@@ -574,6 +597,7 @@ EXPOAPPIOT/
 ├── App.js
 ├── package.json
 └── README.md
+
 
 ---
 
