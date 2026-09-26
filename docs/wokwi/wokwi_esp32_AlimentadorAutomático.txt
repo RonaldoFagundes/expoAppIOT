@@ -1,0 +1,506 @@
+
+
+ ESP32 — Alimentador Automático IoT
+
+ #include <WiFi.h>
+#include <PubSubClient.h>
+#include <ESP32Servo.h>
+
+
+// ========================================
+// Wi-Fi
+// ========================================
+
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+
+
+// ========================================
+// MQTT
+// ========================================
+
+const char* mqttServer = "broker.hivemq.com";
+const int mqttPort = 1883;
+
+const char* mqttTopicSet =
+  "esp32/feeder/set";
+
+const char* mqttTopicState =
+  "esp32/feeder/state";
+
+
+// ========================================
+// Objetos
+// ========================================
+
+WiFiClient espClient;
+
+PubSubClient client(
+  espClient
+);
+
+Servo feederServo;
+
+
+// ========================================
+// Pinos
+// ========================================
+
+const int SERVO_PIN = 5;
+
+const int LED_PIN = 2;
+
+
+// ========================================
+// Configuração do servo
+// ========================================
+
+const int SERVO_CLOSED = 0;
+
+const int SERVO_OPEN = 90;
+
+
+// Tempo que a comporta permanece aberta
+
+const int FEED_TIME = 1000;
+
+
+// ========================================
+// Estado
+// ========================================
+
+bool feeding = false;
+
+
+// ========================================
+// Wi-Fi
+// ========================================
+
+void setupWiFi() {
+
+  Serial.println();
+
+  Serial.println(
+    "Conectando ao Wi-Fi..."
+  );
+
+
+  WiFi.begin(
+    ssid,
+    password
+  );
+
+
+  while (
+    WiFi.status() != WL_CONNECTED
+  ) {
+
+    delay(500);
+
+    Serial.print(".");
+  }
+
+
+  Serial.println();
+
+  Serial.println(
+    "Wi-Fi conectado!"
+  );
+
+
+  Serial.print(
+    "IP: "
+  );
+
+  Serial.println(
+    WiFi.localIP()
+  );
+}
+
+
+// ========================================
+// Publicar estado
+// ========================================
+
+void publishState(
+  const char* state
+) {
+
+  client.publish(
+    mqttTopicState,
+    state,
+    true
+  );
+
+
+  Serial.print(
+    "Estado publicado: "
+  );
+
+  Serial.println(
+    state
+  );
+}
+
+
+// ========================================
+// Alimentar
+// ========================================
+
+void feedAnimal() {
+
+  // Evita executar duas alimentações
+  // simultaneamente
+
+  if (feeding) {
+
+    Serial.println(
+      "Alimentador já está funcionando."
+    );
+
+    return;
+  }
+
+
+  feeding = true;
+
+
+  // ==============================
+  // Estado: alimentando
+  // ==============================
+
+  publishState(
+    "feeding"
+  );
+
+
+  Serial.println();
+
+  Serial.println(
+    "======================"
+  );
+
+  Serial.println(
+    "LIBERANDO RACAO"
+  );
+
+  Serial.println(
+    "======================"
+  );
+
+
+  // ==============================
+  // Liga LED
+  // ==============================
+
+  digitalWrite(
+    LED_PIN,
+    HIGH
+  );
+
+
+  // ==============================
+  // Abre comporta
+  // ==============================
+
+  Serial.println(
+    "Abrindo comporta..."
+  );
+
+
+  feederServo.write(
+    SERVO_OPEN
+  );
+
+
+  delay(
+    FEED_TIME
+  );
+
+
+  // ==============================
+  // Fecha comporta
+  // ==============================
+
+  Serial.println(
+    "Fechando comporta..."
+  );
+
+
+  feederServo.write(
+    SERVO_CLOSED
+  );
+
+
+  // ==============================
+  // Desliga LED
+  // ==============================
+
+  digitalWrite(
+    LED_PIN,
+    LOW
+  );
+
+
+  // ==============================
+  // Estado: pronto
+  // ==============================
+
+  feeding = false;
+
+
+  publishState(
+    "ready"
+  );
+
+
+  Serial.println(
+    "Alimentação concluída!"
+  );
+}
+
+
+// ========================================
+// Callback MQTT
+// ========================================
+
+void callback(
+  char* topic,
+  byte* payload,
+  unsigned int length
+) {
+
+  String message = "";
+
+
+  // Converte payload para String
+
+  for (
+    unsigned int i = 0;
+    i < length;
+    i++
+  ) {
+
+    message += (
+      char
+    )payload[i];
+  }
+
+
+  Serial.println();
+
+  Serial.println(
+    "-------------------------"
+  );
+
+
+  Serial.print(
+    "Topico: "
+  );
+
+  Serial.println(
+    topic
+  );
+
+
+  Serial.print(
+    "Mensagem: "
+  );
+
+  Serial.println(
+    message
+  );
+
+
+  // ==============================
+  // Comando para alimentar
+  // ==============================
+
+  if (
+    message == "feed"
+  ) {
+
+    feedAnimal();
+
+  }
+
+  else {
+
+    Serial.println(
+      "Comando desconhecido."
+    );
+  }
+}
+
+
+// ========================================
+// Reconectar MQTT
+// ========================================
+
+void reconnectMQTT() {
+
+  while (
+    !client.connected()
+  ) {
+
+    Serial.print(
+      "Conectando ao MQTT..."
+    );
+
+
+    // ID único
+
+    String clientId =
+      "ESP32-FEEDER-" +
+      String(
+        random(0xffff),
+        HEX
+      );
+
+
+    if (
+      client.connect(
+        clientId.c_str()
+      )
+    ) {
+
+      Serial.println(
+        " conectado!"
+      );
+
+
+      // Inscreve no tópico
+
+      client.subscribe(
+        mqttTopicSet
+      );
+
+
+      Serial.print(
+        "Inscrito em: "
+      );
+
+      Serial.println(
+        mqttTopicSet
+      );
+
+
+      // Estado inicial
+
+      publishState(
+        "ready"
+      );
+
+    }
+
+    else {
+
+      Serial.print(
+        " Falhou. Código: "
+      );
+
+      Serial.println(
+        client.state()
+      );
+
+
+      delay(2000);
+    }
+  }
+}
+
+
+// ========================================
+// SETUP
+// ========================================
+
+void setup() {
+
+  Serial.begin(
+    115200
+  );
+
+
+  // ====================================
+  // LED
+  // ====================================
+
+  pinMode(
+    LED_PIN,
+    OUTPUT
+  );
+
+
+  digitalWrite(
+    LED_PIN,
+    LOW
+  );
+
+
+  // ====================================
+  // Servo
+  // ====================================
+
+  feederServo.attach(
+    SERVO_PIN
+  );
+
+
+  // Começa fechado
+
+  feederServo.write(
+    SERVO_CLOSED
+  );
+
+
+  // ====================================
+  // Wi-Fi
+  // ====================================
+
+  setupWiFi();
+
+
+  // ====================================
+  // MQTT
+  // ====================================
+
+  client.setServer(
+    mqttServer,
+    mqttPort
+  );
+
+
+  client.setCallback(
+    callback
+  );
+}
+
+
+// ========================================
+// LOOP
+// ========================================
+
+void loop() {
+
+  // Verifica Wi-Fi
+
+  if (
+    WiFi.status() != WL_CONNECTED
+  ) {
+
+    setupWiFi();
+  }
+
+
+  // Verifica MQTT
+
+  if (
+    !client.connected()
+  ) {
+
+    reconnectMQTT();
+  }
+
+
+  client.loop();
+}

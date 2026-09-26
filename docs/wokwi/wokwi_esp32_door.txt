@@ -1,0 +1,403 @@
+
+
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ESP32Servo.h>
+
+// ========================================
+// Wi-Fi
+// ========================================
+
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+
+
+// ========================================
+// MQTT
+// ========================================
+
+const char* mqttServer = "broker.hivemq.com";
+const int mqttPort = 1883;
+
+const char* mqttTopicSet   = "esp32/door/set";
+const char* mqttTopicState = "esp32/door/state";
+
+
+// ========================================
+// Objetos
+// ========================================
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+Servo servoMotor;
+
+
+// ========================================
+// Pinos
+// ========================================
+
+const int SERVO_PIN = 5;
+
+const int LED_OPEN  = 2;
+const int LED_CLOSE = 12;
+
+
+// ========================================
+// Estado da porta
+// ========================================
+
+// 0 = fechada
+// 1 = aberta
+
+int doorStatus = 0;
+
+
+// ========================================
+// Wi-Fi
+// ========================================
+
+void setupWiFi() {
+
+  Serial.println();
+  Serial.println("Conectando ao Wi-Fi...");
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+
+    delay(500);
+
+    Serial.print(".");
+  }
+
+  Serial.println();
+  Serial.println("Wi-Fi conectado!");
+
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+
+// ========================================
+// Publicar estado da porta
+// ========================================
+
+void publishDoorState() {
+
+  char estado[2];
+
+  sprintf(
+    estado,
+    "%d",
+    doorStatus
+  );
+
+  client.publish(
+    mqttTopicState,
+    estado,
+    true
+  );
+
+  Serial.print("Estado publicado: ");
+  Serial.println(estado);
+}
+
+
+// ========================================
+// Abrir porta
+// ========================================
+
+void openDoor() {
+
+  Serial.println("Abrindo porta...");
+
+  // Movimento de 0 até 180 graus
+
+  for (int angle = 0; angle <= 180; angle++) {
+
+    servoMotor.write(angle);
+
+    delay(15);
+  }
+
+
+  // LEDs
+
+  digitalWrite(LED_OPEN, HIGH);
+  digitalWrite(LED_CLOSE, LOW);
+
+
+  // Estado
+
+  doorStatus = 1;
+
+
+  // Publica estado
+
+  publishDoorState();
+
+
+  Serial.println("Porta ABERTA");
+}
+
+
+// ========================================
+// Fechar porta
+// ========================================
+
+void closeDoor() {
+
+  Serial.println("Fechando porta...");
+
+  // Movimento de 180 até 0 graus
+
+  for (int angle = 180; angle >= 0; angle--) {
+
+    servoMotor.write(angle);
+
+    delay(15);
+  }
+
+
+  // LEDs
+
+  digitalWrite(LED_OPEN, LOW);
+  digitalWrite(LED_CLOSE, HIGH);
+
+
+  // Estado
+
+  doorStatus = 0;
+
+
+  // Publica estado
+
+  publishDoorState();
+
+
+  Serial.println("Porta FECHADA");
+}
+
+
+// ========================================
+// Callback MQTT
+// ========================================
+
+void callback(
+  char* topic,
+  byte* payload,
+  unsigned int length
+) {
+
+  String msg = "";
+
+
+  // Converte payload para String
+
+  for (unsigned int i = 0; i < length; i++) {
+
+    msg += (char)payload[i];
+  }
+
+
+  Serial.println();
+  Serial.println("-------------------------");
+
+  Serial.print("Topico: ");
+  Serial.println(topic);
+
+  Serial.print("Mensagem: ");
+  Serial.println(msg);
+
+
+  // ====================================
+  // Abrir
+  // ====================================
+
+  if (msg == "1") {
+
+    if (doorStatus == 0) {
+
+      openDoor();
+
+    } else {
+
+      Serial.println("Porta já está aberta.");
+    }
+  }
+
+
+  // ====================================
+  // Fechar
+  // ====================================
+
+  else if (msg == "0") {
+
+    if (doorStatus == 1) {
+
+      closeDoor();
+
+    } else {
+
+      Serial.println("Porta já está fechada.");
+    }
+  }
+
+
+  else {
+
+    Serial.println("Comando inválido.");
+  }
+}
+
+
+// ========================================
+// Reconectar MQTT
+// ========================================
+
+void reconnectMQTT() {
+
+  while (!client.connected()) {
+
+    Serial.print("Conectando ao MQTT... ");
+
+
+    // ID único
+
+    String clientId =
+      "ESP32-PORTA-" +
+      String(random(0xffff), HEX);
+
+
+    if (client.connect(clientId.c_str())) {
+
+      Serial.println("Conectado!");
+
+
+      // Inscreve no tópico de comando
+
+      client.subscribe(
+        mqttTopicSet
+      );
+
+
+      Serial.print("Inscrito em: ");
+      Serial.println(mqttTopicSet);
+
+
+      // Publica estado atual
+
+      publishDoorState();
+
+    }
+
+    else {
+
+      Serial.print("Falhou. Código: ");
+
+      Serial.println(
+        client.state()
+      );
+
+      Serial.println(
+        "Tentando novamente em 2 segundos..."
+      );
+
+      delay(2000);
+    }
+  }
+}
+
+
+// ========================================
+// SETUP
+// ========================================
+
+void setup() {
+
+  Serial.begin(115200);
+
+
+  // LEDs
+
+  pinMode(
+    LED_OPEN,
+    OUTPUT
+  );
+
+  pinMode(
+    LED_CLOSE,
+    OUTPUT
+  );
+
+
+  // Estado inicial
+
+  digitalWrite(
+    LED_OPEN,
+    LOW
+  );
+
+  digitalWrite(
+    LED_CLOSE,
+    HIGH
+  );
+
+
+  // Servo
+
+  servoMotor.attach(
+    SERVO_PIN
+  );
+
+
+  // Porta começa fechada
+
+  servoMotor.write(0);
+
+  doorStatus = 0;
+
+
+  // Wi-Fi
+
+  setupWiFi();
+
+
+  // MQTT
+
+  client.setServer(
+    mqttServer,
+    mqttPort
+  );
+
+  client.setCallback(
+    callback
+  );
+}
+
+
+// ========================================
+// LOOP
+// ========================================
+
+void loop() {
+
+  // Verifica Wi-Fi
+
+  if (WiFi.status() != WL_CONNECTED) {
+
+    setupWiFi();
+  }
+
+
+  // Verifica MQTT
+
+  if (!client.connected()) {
+
+    reconnectMQTT();
+  }
+
+
+  client.loop();
+}
